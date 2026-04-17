@@ -104,11 +104,11 @@ Pour activer Firebase, vous devez:
 - Vérifiez que l'utilisateur est connecté
 
 ## Avantages de Firebase
-- ✅ **Données en temps réel** - synchronisation automatique
-- ✅ **Scalabilité** - supporte des millions d'utilisateurs
-- ✅ **Sécurité** - règles Firestore configurables
-- ✅ **Backup automatique** - pas de perte de données
-- ✅ **Multi-utilisateurs** - idéal pour une application médicale collaborative
+-  **Données en temps réel** - synchronisation automatique
+-  **Scalabilité** - supporte des millions d'utilisateurs
+-  **Sécurité** - règles Firestore configurables
+-  **Backup automatique** - pas de perte de données
+-  **Multi-utilisateurs** - idéal pour une application médicale collaborative
 
 ## Notes Importantes
 1. En mode développement, utilisez les règles Firestore en "test mode"
