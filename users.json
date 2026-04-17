@@ -1,0 +1,7 @@
+{
+  "Dr hiba": {
+    "password": "$2b$12$7m3yjzc/F5hspJbvCje6juJCkg/epDeGaUEDszaOyHG1qHOGixX5.",
+    "totp_secret": "7WA65H5S665MP47RJIT6FSRL2HKJYEJP",
+    "totp_verified": true
+  }
+}
