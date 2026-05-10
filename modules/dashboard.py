@@ -30,7 +30,11 @@ def render():
 	# Filtres dashboard
 	df_raw_copy = df_raw.copy()
 	df_raw_copy.replace('?', np.nan, inplace=True)
-	df_raw_copy['age'] = pd.to_numeric(df_raw_copy['age'], errors='coerce')
+	# Convertir toutes les colonnes numériques
+	numeric_cols = ['age', 'TSH', 'T3', 'TT4', 'T4U', 'FTI']
+	for col in numeric_cols:
+		if col in df_raw_copy.columns:
+			df_raw_copy[col] = pd.to_numeric(df_raw_copy[col], errors='coerce')
 	df_raw_copy['class_label'] = df_raw_copy['class'].apply(extract_label)
 
 	with st.expander("🔍 Filtres", expanded=False):
@@ -113,6 +117,10 @@ def render():
 
 		# Tendance âge vs marqueurs
 		df_trend = df_filtered.dropna(subset=['age', 'TSH'])
+		# Convertir les colonnes numériques
+		for col in ['TSH', 'T3', 'TT4']:
+			df_trend[col] = pd.to_numeric(df_trend[col], errors='coerce')
+		
 		df_trend['age_bin'] = pd.cut(df_trend['age'], bins=10)
 		df_trend['age_mid'] = df_trend['age_bin'].apply(lambda x: x.mid if pd.notna(x) else np.nan)
 		df_agg = df_trend.groupby('age_mid')[['TSH','T3','TT4']].median().reset_index()
