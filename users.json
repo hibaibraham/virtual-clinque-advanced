@@ -3,5 +3,15 @@
     "password": "$2b$12$7m3yjzc/F5hspJbvCje6juJCkg/epDeGaUEDszaOyHG1qHOGixX5.",
     "totp_secret": "7WA65H5S665MP47RJIT6FSRL2HKJYEJP",
     "totp_verified": true
+  },
+  "ayoub": {
+    "password": "$2b$12$MoUCCoTht3d4sd5py5wXj.AyJdMUYmuTAi5RLnIXSVbsa4OiKPF6S",
+    "totp_secret": "K33NANZCJWJLNYHLVLA5H35WQA22IHJ7",
+    "totp_verified": true
+  },
+  "ayoub1": {
+    "password": "$2b$12$GCMnQ0Fm1r69bKvV19OKOePINFjCT/q5vXkYut/vnyuf1OyXOi6SO",
+    "totp_secret": "5ACWO3AAJ2UR43AUA2YQZFRNFCWMKZSS",
+    "totp_verified": true
   }
 }

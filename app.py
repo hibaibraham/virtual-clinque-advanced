@@ -7,7 +7,7 @@ from utils.core import inject_css, inject_bg, page_header
 from utils.auth import require_auth
 
 st.set_page_config(
-    page_title="MedAI — Diagnostic Thyroïdien",
+    page_title="MedAI — Diagnostic Clinique Intelligent",
     page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -32,7 +32,7 @@ with st.sidebar:
     if "page" not in st.session_state:
         st.session_state.page = "🩺 Prédiction"
 
-    pages = ["🩺 Prédiction", "📊 Tableau de Bord", "📜 Historique", "ℹ️ À Propos"]
+    pages = ["🩺 Prédiction", "🧠 Tumeur Cérébrale", "📊 Tableau de Bord", "📜 Historique", "ℹ️ À Propos"]
     page  = st.radio("nav", pages,
                      index=pages.index(st.session_state.page),
                      label_visibility="collapsed")
@@ -42,9 +42,10 @@ with st.sidebar:
     st.markdown("""
     <div style='padding:1rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:10px;font-size:0.78rem;color:#94a3b8;'>
         <div style='margin-bottom:0.4rem;'><span class='status-dot'></span> Système opérationnel</div>
-        <div style='margin-bottom:0.3rem;'>🤖 Modèle : Random Forest</div>
-        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid Disease</div>
-        <div>🔖 Version : 3.0</div>
+        <div style='margin-bottom:0.3rem;'>🤖 Thyroïde : Random Forest</div>
+        <div style='margin-bottom:0.3rem;'>🧠 IRM : EfficientNet-B0</div>
+        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain MRI</div>
+        <div>🔖 Version : 3.1</div>
     </div>""", unsafe_allow_html=True)
 
     # Déconnexion
@@ -62,6 +63,13 @@ if page == "🩺 Prédiction":
                 "Diagnostic Thyroïdien par IA",
                 "Renseignez les paramètres biologiques pour une analyse prédictive en temps réel")
     from modules.prediction import render
+    render()
+
+elif page == "🧠 Tumeur Cérébrale":
+    page_header("🧠 Module IRM",
+                "Diagnostic Tumeur Cérébrale",
+                "Analysez une image IRM cérébrale — classification en 4 classes par EfficientNet-B0")
+    from modules.brain_tumor import render
     render()
 
 elif page == "📊 Tableau de Bord":
