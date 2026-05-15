@@ -388,7 +388,7 @@ nn.Sequential(
     <div style='text-align:center;padding:1rem;background:rgba(0,212,255,0.05);
                 border-radius:10px;border:1px solid rgba(0,212,255,0.15);'>
         <div style='color:#94a3b8;font-size:0.85rem;'>
-            🧠 <strong>MedAI Brain Tumor Dashboard</strong> — Modèle EfficientNet-B0
+            🧠 <strong>Virtual Clinic Dashboard</strong> — Modèle EfficientNet-B0
         </div>
         <div style='color:#64748b;font-size:0.75rem;margin-top:0.3rem;'>
             Outil d'aide à la décision médicale — Ne remplace pas un diagnostic professionnel

@@ -1,5 +1,5 @@
 """
-MedAI Thyroid v3.0 — Diagnostic Thyroïdien Intelligent
+Virtual Clinic v3.1 — Diagnostic Intelligent
 Lancer : streamlit run app.py
 """
 import streamlit as st
@@ -7,7 +7,7 @@ from utils.core import inject_css, inject_bg, page_header
 from utils.auth import require_auth, get_user_role
 
 st.set_page_config(
-    page_title="MedAI — Diagnostic Clinique Intelligent",
+    page_title="Virtual Clinic",
     page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -42,7 +42,7 @@ with st.sidebar:
     st.markdown("""
     <div class="sidebar-logo">
         <span class="logo-icon">🧬</span>
-        <h2>MedAI Thyroid</h2>
+        <h2>Virtual Clinic</h2>
         <p>Système de Diagnostic Intelligent</p>
     </div>""", unsafe_allow_html=True)
 
@@ -423,7 +423,7 @@ elif page == "📜 Historique":
 
 elif page == "ℹ️ À Propos":
     page_header("ℹ️ Documentation",
-                "À Propos de MedAI Thyroid",
+                "À Propos de Virtual Clinic",
                 "Architecture, pipeline ML et informations cliniques de référence")
     from modules.apropos import render
     render()

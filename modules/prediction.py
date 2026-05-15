@@ -189,7 +189,7 @@ def render():
 
 			# Export PDF-like rapport texte
 			section_label("📄 Rapport")
-			rapport = f"""RAPPORT DE DIAGNOSTIC — MedAI Thyroid v3.0
+			rapport = f"""RAPPORT DE DIAGNOSTIC — Virtual Clinic v3.1
 ==========================================
 Date       : {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}
 Patient    : Âge {age} ans, {'Féminin' if sex_val==0 else 'Masculin'}

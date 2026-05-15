@@ -13,7 +13,7 @@ from PIL import Image
 from utils.database import get_users_collection, is_mongodb_available
 
 USERS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'users.json')
-APP_NAME   = "MedAI Thyroid"
+APP_NAME   = "Virtual Clinic"
 
 
 # ── Persistance ──────────────────────────────────────────────────────────────
