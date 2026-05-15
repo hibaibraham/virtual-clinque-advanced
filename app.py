@@ -329,17 +329,8 @@ elif page == "📅 Rendez-vous":
                     st.info("Aucun patient trouvé.")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    page_header("📅 Gestion des Rendez-vous",
-                "Calendrier et Planification",
-                "Organisation des consultations")
-    st.info("🚧 Module en développement - Fonctionnalité à venir")
-    st.markdown("""
-    ### Fonctionnalités prévues :
-    - 📅 Calendrier interactif
-    - ➕ Prise de rendez-vous
-    - 📞 Rappels automatiques
-    - 📊 Vue journalière/hebdomadaire
-    """)
+    from modules.secretaire import render_appointments
+    render_appointments()
 
 elif page == "📊 Statistiques":
     # Barre de recherche en haut
