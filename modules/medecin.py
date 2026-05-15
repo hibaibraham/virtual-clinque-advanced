@@ -21,7 +21,7 @@ def render():
     """, unsafe_allow_html=True)
     
     # Onglets
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📋 Patients en Attente", "🔍 Rechercher Patient", "📊 Dossiers Complets", "👥 Tous les Patients", "🦋 Thyroïde", "🧠 Cancer Cérébral"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📋 Patients en Attente", "🔍 Rechercher Patient", "📊 Dossiers Complets", "👥 Tous les Patients", "🦋 Thyroïde", "🧠 Cancer Cérébral", "🩸 PTDM"])
     
     # ── Tab 1: Patients en Attente ─────────────────────────────────────────────
     with tab1:
@@ -431,4 +431,12 @@ def render():
                    "Analyse d'Images IRM par Deep Learning",
                    "Analysez une image IRM cérébrale — classification en 4 classes par EfficientNet-B0")
         from modules.brain_tumor import render
+        render()
+    
+    # ── Tab 7: PTDM ─────────────────────────────────────────────
+    with tab7:
+        page_header("🩸 Prédiction Risque PTDM",
+                   "Diabète Post-Transplantation",
+                   "Évaluation du risque de développer un diabète après transplantation rénale")
+        from modules.ptdm_prediction import render
         render()

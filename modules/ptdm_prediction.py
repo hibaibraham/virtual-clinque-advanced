@@ -10,11 +10,15 @@ def render():
     try:
         from models.model_manager import ModelManager
         manager = ModelManager.get_cached_manager()
+        
+        # Charger uniquement le modèle PTDM, pas tous les modèles
         model = manager.get_model('ptdm')
         if not model.loaded:
-            manager.load_all_models()
+            model.load()  # Charger seulement PTDM
+            
     except Exception as e:
-        st.error(f"❌ Modèle introuvable : {e}")
+        st.error(f"❌ Erreur lors du chargement du modèle PTDM : {e}")
+        st.info("💡 Le modèle PTDM utilise un algorithme de Machine Learning simple qui ne nécessite pas de dépendances lourdes.")
         return
 
     col_form, col_result = st.columns([3, 2], gap="large")
