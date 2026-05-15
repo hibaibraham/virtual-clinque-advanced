@@ -427,8 +427,8 @@ def render():
     
     # ── Tab 6: Cancer Cérébral ─────────────────────────────────────────────
     with tab6:
-        page_header("🧠 Diagnostic du Cancer Cérébral",
-                   "Analyse d'Images MRI par Deep Learning",
-                   "Section en développement pour la détection de tumeurs cérébrales")
-        from modules.brain_cancer import render
+        page_header("🧠 Diagnostic Tumeur Cérébrale",
+                   "Analyse d'Images IRM par Deep Learning",
+                   "Analysez une image IRM cérébrale — classification en 4 classes par EfficientNet-B0")
+        from modules.brain_tumor import render
         render()

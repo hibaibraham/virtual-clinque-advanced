@@ -98,10 +98,7 @@ def compute_engineered_features(row: dict) -> dict:
 
 
 def save_prediction(patient_data: dict, prediction: int, probability: float):
-    from utils.firebase import save_prediction_firestore
-    # Firebase
-    fb_record = save_prediction_firestore(patient_data, prediction, probability)
-    # Local CSV fallback
+    # Sauvegarde locale uniquement (CSV)
     record = {
         'timestamp':  datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'prediction': 'Pathologique' if prediction == 1 else 'Normal',
@@ -115,7 +112,7 @@ def save_prediction(patient_data: dict, prediction: int, probability: float):
     else:
         df_hist = df_new
     df_hist.to_csv(HISTORY_PATH, index=False)
-    return fb_record if fb_record else record
+    return record
 
 
 def confidence_badge(prob: float) -> str:
