@@ -62,7 +62,7 @@ with st.sidebar:
 
     # Pages selon le rôle
     if user_role == "medecin":
-        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📜 Historique", "ℹ️ À Propos"]
+        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "🩸 Analyse PTDM", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📊 Dashboard PTDM", "📜 Historique", "ℹ️ À Propos"]
     elif user_role == "secretaire":
         pages = ["📋 Accueil", "➕ Nouveau Patient", "👥 Liste Patients", "📅 Rendez-vous", "📊 Statistiques"]
     else:
@@ -83,7 +83,8 @@ with st.sidebar:
         <div style='margin-bottom:0.4rem;'><span class='status-dot'></span> Système opérationnel</div>
         <div style='margin-bottom:0.3rem;'>🤖 Thyroïde : Random Forest</div>
         <div style='margin-bottom:0.3rem;'>🧠 IRM : EfficientNet-B0</div>
-        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain MRI</div>
+        <div style='margin-bottom:0.3rem;'>🩸 PTDM : SVM / RF</div>
+        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain + PTDM</div>
         <div>🔖 Version : 3.1</div>
     </div>""", unsafe_allow_html=True)
 
@@ -397,6 +398,20 @@ elif page == "📊 Dashboard Cancer":
                 "Tableau de Bord Cancer Cérébral",
                 "Statistiques et performances du modèle EfficientNet-B0")
     from modules.brain_tumor_dashboard import render
+    render()
+
+elif page == "🩸 Analyse PTDM":
+    page_header("🩸 Module PTDM",
+                "Diagnostic Diabète Post-Transplantation",
+                "Évaluez le risque de diabète à partir des paramètres cliniques du patient et du donneur")
+    from modules.ptdm_prediction import render
+    render()
+
+elif page == "📊 Dashboard PTDM":
+    page_header("📊 Analytics PTDM",
+                "Tableau de Bord PTDM",
+                "Statistiques sur les transplantations et la prévalence du risque PTDM")
+    from modules.ptdm_dashboard import render
     render()
 
 elif page == "📜 Historique":
