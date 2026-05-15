@@ -32,7 +32,7 @@ with st.sidebar:
     if "page" not in st.session_state:
         st.session_state.page = "🩺 Prédiction"
 
-    pages = ["🩺 Prédiction", "🧠 Tumeur Cérébrale", "📊 Tableau de Bord", "📜 Historique", "ℹ️ À Propos"]
+    pages = ["🩺 Prédiction", "🧠 Tumeur Cérébrale", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📜 Historique", "ℹ️ À Propos"]
     page  = st.radio("nav", pages,
                      index=pages.index(st.session_state.page),
                      label_visibility="collapsed")
@@ -72,11 +72,18 @@ elif page == "🧠 Tumeur Cérébrale":
     from modules.brain_tumor import render
     render()
 
-elif page == "📊 Tableau de Bord":
-    page_header("📊 Analytics",
-                "Tableau de Bord Clinique",
-                "Statistiques interactives du dataset et performance du modèle")
+elif page == "📊 Dashboard Thyroïde":
+    page_header("📊 Analytics Thyroïde",
+                "Tableau de Bord Thyroïde",
+                "Statistiques interactives du dataset et performance du modèle Random Forest")
     from modules.dashboard import render
+    render()
+
+elif page == "📊 Dashboard Cancer":
+    page_header("📊 Analytics Cancer Cérébral",
+                "Tableau de Bord Cancer Cérébral",
+                "Statistiques et performances du modèle EfficientNet-B0")
+    from modules.brain_tumor_dashboard import render
     render()
 
 elif page == "📜 Historique":
