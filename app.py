@@ -64,7 +64,7 @@ with st.sidebar:
     if user_role == "medecin":
         pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📜 Historique", "ℹ️ À Propos"]
     elif user_role == "secretaire":
-        pages = ["📋 Interface Secrétaire", "👥 Gestion Patients", "📅 Rendez-vous", "📊 Statistiques", "ℹ️ À Propos"]
+        pages = ["📋 Accueil", "➕ Nouveau Patient", "👥 Liste Patients", "📅 Rendez-vous", "📊 Statistiques"]
     else:
         pages = ["ℹ️ À Propos"]
     
@@ -104,23 +104,280 @@ if page == "👨‍⚕️ Interface Médecin":
     render()
 
 # Pages Secrétaire
-elif page == "📋 Interface Secrétaire":
-    from modules.secretaire import render
-    render()
+elif page == "📋 Accueil":
+    # Barre de recherche en haut
+    st.markdown("""
+    <style>
+    .search-bar {
+        background: rgba(236,72,153,0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(236,72,153,0.2);
+        margin-bottom: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        search_term = st.text_input("🔍 Recherche rapide", 
+                                   placeholder="Rechercher un patient par nom, prénom, téléphone, ID...",
+                                   key="quick_search",
+                                   label_visibility="collapsed")
+    with col2:
+        search_btn = st.button("Rechercher", use_container_width=True, key="btn_quick_search")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Afficher les résultats de recherche si recherche effectuée
+    if search_btn and search_term:
+        from utils.patients import search_patients
+        results = search_patients(search_term)
+        if results:
+            st.success(f"📊 {len(results)} patient(s) trouvé(s)")
+            
+            for patient in results:
+                status_icon = {
+                    "en_attente": "⏳",
+                    "en_cours": "🔄",
+                    "complete": "✅"
+                }.get(patient.get('status', ''), "❓")
+                
+                with st.expander(f"{status_icon} {patient.get('prenom', '')} {patient.get('nom', '')} - {patient.get('patient_id', '')}", expanded=False):
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Informations Personnelles:**")
+                        st.text(f"ID: {patient.get('patient_id', '')}")
+                        st.text(f"Nom: {patient.get('nom', '')}")
+                        st.text(f"Prénom: {patient.get('prenom', '')}")
+                        st.text(f"Âge: {patient.get('age', '')}")
+                        st.text(f"Téléphone: {patient.get('telephone', '')}")
+                    
+                    with col2:
+                        st.markdown("**Informations Médicales:**")
+                        st.text(f"Statut: {patient.get('status', '').replace('_', ' ').title()}")
+                        st.text(f"Motif: {patient.get('motif_consultation', '')}")
+                        st.text(f"Créé le: {patient.get('created_at', '').split('T')[0] if patient.get('created_at') else ''}")
+            
+            st.markdown("---")
+        else:
+            st.info("Aucun patient trouvé avec ces critères.")
+            st.markdown("---")
+    
+    # Contenu de la page d'accueil
+    st.markdown("""
+    <div style='text-align:center;padding:2rem;background:rgba(236,72,153,0.05);
+                border-radius:12px;border:1px solid rgba(236,72,153,0.2);margin-bottom:2rem;'>
+        <div style='font-size:3rem;margin-bottom:0.5rem;'>📋</div>
+        <h1 style='color:#f1f5f9;margin-bottom:0.5rem;'>Espace Secrétaire</h1>
+        <p style='color:#94a3b8;font-size:1.1rem;'>
+        Bienvenue {username} - Gestion Administrative
+        </p>
+    </div>
+    """.format(username=username), unsafe_allow_html=True)
+    
+    from utils.patients import get_all_patients
+    from datetime import datetime
+    
+    all_patients = get_all_patients()
+    today = datetime.now().date()
+    today_patients = len([p for p in all_patients if p.get('created_at', '').startswith(str(today))])
+    en_attente = len([p for p in all_patients if p.get('status') == 'en_attente'])
+    
+    # Statistiques rapides
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("👥 Total Patients", len(all_patients))
+    with col2:
+        st.metric("📅 Aujourd'hui", today_patients)
+    with col3:
+        st.metric("⏳ En Attente", en_attente)
+    with col4:
+        complets = len([p for p in all_patients if p.get('status') == 'complete'])
+        st.metric("✅ Complets", complets)
+    
+    st.markdown("---")
+    
+    # Actions rapides
+    st.subheader("🚀 Actions Rapides")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("➕ Nouveau Patient", use_container_width=True):
+            st.session_state.page = "➕ Nouveau Patient"
+            st.rerun()
+    
+    with col2:
+        if st.button("👥 Voir Patients", use_container_width=True):
+            st.session_state.page = "👥 Liste Patients"
+            st.rerun()
+    
+    with col3:
+        if st.button("🔍 Rechercher", use_container_width=True):
+            st.session_state.page = "🔍 Rechercher"
+            st.rerun()
 
-elif page == "👥 Gestion Patients":
-    from modules.secretaire import render
-    render()
+elif page == "➕ Nouveau Patient":
+    # Barre de recherche en haut
+    st.markdown("""
+    <style>
+    .search-bar {
+        background: rgba(236,72,153,0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(236,72,153,0.2);
+        margin-bottom: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        search_term = st.text_input("🔍 Recherche rapide", 
+                                   placeholder="Rechercher un patient par nom, prénom, téléphone, ID...",
+                                   key="quick_search_new",
+                                   label_visibility="collapsed")
+    with col2:
+        if st.button("Rechercher", use_container_width=True, key="btn_quick_search_new"):
+            if search_term:
+                from utils.patients import search_patients
+                results = search_patients(search_term)
+                if results:
+                    st.success(f"📊 {len(results)} patient(s) trouvé(s)")
+                    for patient in results:
+                        status_icon = {"en_attente": "⏳", "en_cours": "🔄", "complete": "✅"}.get(patient.get('status', ''), "❓")
+                        st.info(f"{status_icon} {patient.get('prenom', '')} {patient.get('nom', '')} - {patient.get('patient_id', '')}")
+                else:
+                    st.info("Aucun patient trouvé.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    from modules.secretaire import render_new_patient
+    render_new_patient()
+
+elif page == "👥 Liste Patients":
+    # Barre de recherche en haut
+    st.markdown("""
+    <style>
+    .search-bar {
+        background: rgba(236,72,153,0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(236,72,153,0.2);
+        margin-bottom: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        search_term = st.text_input("🔍 Recherche rapide", 
+                                   placeholder="Rechercher un patient par nom, prénom, téléphone, ID...",
+                                   key="quick_search_list",
+                                   label_visibility="collapsed")
+    with col2:
+        if st.button("Rechercher", use_container_width=True, key="btn_quick_search_list"):
+            if search_term:
+                from utils.patients import search_patients
+                results = search_patients(search_term)
+                if results:
+                    st.success(f"📊 {len(results)} patient(s) trouvé(s)")
+                    for patient in results:
+                        status_icon = {"en_attente": "⏳", "en_cours": "🔄", "complete": "✅"}.get(patient.get('status', ''), "❓")
+                        st.info(f"{status_icon} {patient.get('prenom', '')} {patient.get('nom', '')} - {patient.get('patient_id', '')}")
+                else:
+                    st.info("Aucun patient trouvé.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    from modules.secretaire import render_list_patients
+    render_list_patients()
 
 elif page == "📅 Rendez-vous":
+    # Barre de recherche en haut
+    st.markdown("""
+    <style>
+    .search-bar {
+        background: rgba(236,72,153,0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(236,72,153,0.2);
+        margin-bottom: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        search_term = st.text_input("🔍 Recherche rapide", 
+                                   placeholder="Rechercher un patient par nom, prénom, téléphone, ID...",
+                                   key="quick_search_rdv",
+                                   label_visibility="collapsed")
+    with col2:
+        if st.button("Rechercher", use_container_width=True, key="btn_quick_search_rdv"):
+            if search_term:
+                from utils.patients import search_patients
+                results = search_patients(search_term)
+                if results:
+                    st.success(f"📊 {len(results)} patient(s) trouvé(s)")
+                    for patient in results:
+                        status_icon = {"en_attente": "⏳", "en_cours": "🔄", "complete": "✅"}.get(patient.get('status', ''), "❓")
+                        st.info(f"{status_icon} {patient.get('prenom', '')} {patient.get('nom', '')} - {patient.get('patient_id', '')}")
+                else:
+                    st.info("Aucun patient trouvé.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     page_header("📅 Gestion des Rendez-vous",
                 "Calendrier et Planification",
                 "Organisation des consultations")
-    st.info("🚧 Module en développement")
+    st.info("🚧 Module en développement - Fonctionnalité à venir")
+    st.markdown("""
+    ### Fonctionnalités prévues :
+    - 📅 Calendrier interactif
+    - ➕ Prise de rendez-vous
+    - 📞 Rappels automatiques
+    - 📊 Vue journalière/hebdomadaire
+    """)
 
 elif page == "📊 Statistiques":
-    from modules.secretaire import render
-    render()
+    # Barre de recherche en haut
+    st.markdown("""
+    <style>
+    .search-bar {
+        background: rgba(236,72,153,0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(236,72,153,0.2);
+        margin-bottom: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        search_term = st.text_input("🔍 Recherche rapide", 
+                                   placeholder="Rechercher un patient par nom, prénom, téléphone, ID...",
+                                   key="quick_search_stats",
+                                   label_visibility="collapsed")
+    with col2:
+        if st.button("Rechercher", use_container_width=True, key="btn_quick_search_stats"):
+            if search_term:
+                from utils.patients import search_patients
+                results = search_patients(search_term)
+                if results:
+                    st.success(f"📊 {len(results)} patient(s) trouvé(s)")
+                    for patient in results:
+                        status_icon = {"en_attente": "⏳", "en_cours": "🔄", "complete": "✅"}.get(patient.get('status', ''), "❓")
+                        st.info(f"{status_icon} {patient.get('prenom', '')} {patient.get('nom', '')} - {patient.get('patient_id', '')}")
+                else:
+                    st.info("Aucun patient trouvé.")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    from modules.secretaire import render_statistics
+    render_statistics()
 
 # Pages communes
 elif page == "🦋 Analyse Thyroïde":

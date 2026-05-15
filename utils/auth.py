@@ -1,5 +1,6 @@
 """
-Authentification — login + 2FA TOTP (stockage JSON local)
+Authentification — login + 2FA TOTP
+Supporte MongoDB avec fallback vers JSON local
 """
 import io
 import json
@@ -9,6 +10,7 @@ import pyotp
 import qrcode
 import streamlit as st
 from PIL import Image
+from utils.database import get_users_collection, is_mongodb_available
 
 USERS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'users.json')
 APP_NAME   = "MedAI Thyroid"
@@ -17,6 +19,7 @@ APP_NAME   = "MedAI Thyroid"
 # ── Persistance ──────────────────────────────────────────────────────────────
 
 def _load_users() -> dict:
+    """Charge les utilisateurs depuis JSON (fallback)."""
     if not os.path.exists(USERS_PATH):
         return {}
     with open(USERS_PATH, 'r', encoding='utf-8') as f:
@@ -24,28 +27,60 @@ def _load_users() -> dict:
 
 
 def _save_users(users: dict):
+    """Sauvegarde les utilisateurs dans JSON (fallback)."""
     with open(USERS_PATH, 'w', encoding='utf-8') as f:
         json.dump(users, f, indent=2)
 
-
-# ── Gestion des comptes (Firestore ou local) ─────────────────────────────────
+# ── Gestion des comptes (MongoDB avec fallback JSON) ─────────────────────────
 
 def create_user(username: str, password: str) -> str:
     """Crée un utilisateur et retourne le secret TOTP."""
     # Vérifier existence
     if user_exists(username):
         raise ValueError(f"L'utilisateur '{username}' existe déjà.")
+    
     # Hash password
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     secret = pyotp.random_base32()
-    # Stockage JSON local
+    
+    user_doc = {
+        "username": username,
+        "password": hashed,
+        "totp_secret": secret,
+        "totp_verified": False
+    }
+    
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                collection.insert_one(user_doc.copy())
+                return secret
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     users = _load_users()
-    users[username] = {"password": hashed, "totp_secret": secret, "totp_verified": False}
+    users[username] = user_doc
     _save_users(users)
     return secret
 
 
 def verify_password(username: str, password: str) -> bool:
+    """Vérifie le mot de passe d'un utilisateur."""
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                user = collection.find_one({"username": username})
+                if user and "password" in user:
+                    return bcrypt.checkpw(password.encode(), user["password"].encode())
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     users = _load_users()
     if username not in users:
         return False
@@ -53,34 +88,101 @@ def verify_password(username: str, password: str) -> bool:
 
 
 def verify_totp(username: str, code: str) -> bool:
+    """Vérifie le code TOTP."""
     secret = get_totp_secret(username)
     if not secret:
         return False
     totp  = pyotp.TOTP(secret)
     valid = totp.verify(code, valid_window=1)
+    
     if valid and not is_totp_verified(username):
+        # Marquer comme vérifié
+        if is_mongodb_available():
+            collection = get_users_collection()
+            if collection is not None:
+                try:
+                    collection.update_one(
+                        {"username": username},
+                        {"$set": {"totp_verified": True}}
+                    )
+                    return True
+                except Exception as e:
+                    print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+        
+        # Fallback vers JSON
         users = _load_users()
-        users[username]["totp_verified"] = True
-        _save_users(users)
+        if username in users:
+            users[username]["totp_verified"] = True
+            _save_users(users)
+    
     return valid
 
 
 def get_totp_secret(username: str) -> str:
+    """Récupère le secret TOTP d'un utilisateur."""
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                user = collection.find_one({"username": username})
+                if user:
+                    return user.get("totp_secret", "")
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     users = _load_users()
-    return users.get(username, {}).get("totp_secret")
+    return users.get(username, {}).get("totp_secret", "")
 
 
 def is_totp_verified(username: str) -> bool:
+    """Vérifie si le TOTP a été configuré."""
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                user = collection.find_one({"username": username})
+                if user:
+                    return user.get("totp_verified", False)
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     users = _load_users()
     return users.get(username, {}).get("totp_verified", False)
 
 
 def user_exists(username: str) -> bool:
+    """Vérifie si un utilisateur existe."""
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                return collection.count_documents({"username": username}) > 0
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     return username in _load_users()
 
 
 def get_user_role(username: str) -> str:
     """Retourne le rôle de l'utilisateur (medecin, patient, secretaire)."""
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_users_collection()
+        if collection is not None:
+            try:
+                user = collection.find_one({"username": username})
+                if user:
+                    return user.get("role", "patient")
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers JSON: {e}")
+    
+    # Fallback vers JSON
     users = _load_users()
     return users.get(username, {}).get("role", "patient")
 
@@ -483,9 +585,21 @@ def require_auth():
                 else:
                     secret = create_user(new_user, new_pass)
                     # Ajouter le rôle sélectionné
-                    users = _load_users()
-                    users[new_user]["role"] = selected_role
-                    _save_users(users)
+                    if is_mongodb_available():
+                        collection = get_users_collection()
+                        if collection is not None:
+                            try:
+                                collection.update_one(
+                                    {"username": new_user},
+                                    {"$set": {"role": selected_role}}
+                                )
+                            except Exception as e:
+                                print(f"⚠️ Erreur MongoDB pour le rôle: {e}")
+                    else:
+                        users = _load_users()
+                        users[new_user]["role"] = selected_role
+                        _save_users(users)
+                    
                     st.session_state.auth_username = new_user
                     st.session_state.auth_step = "totp"
                     st.success("Compte créé !")
@@ -497,3 +611,4 @@ def require_auth():
                 st.rerun()
 
         st.stop()
+
