@@ -164,7 +164,7 @@ def render():
 
             # Export PDF-like rapport texte
             section_label("📄 Rapport")
-            rapport = f"""RAPPORT DE PRÉDICTION PTDM — Virtual Clinic
+            rapport = f"""RAPPORT DE PRÉDICTION PTDM — NovaClinic
 ==========================================
 Date       : {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}
 Patient    : Âge {age} ans, {'Masculin' if sex_val==1 else 'Féminin'}

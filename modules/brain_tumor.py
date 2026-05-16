@@ -322,7 +322,7 @@ def render():
         # ── Rapport téléchargeable ─────────────────────────────────────────────
         section_label("📄 Rapport")
         import datetime
-        rapport = f"""RAPPORT D'ANALYSE IRM — Virtual Clinic
+        rapport = f"""RAPPORT D'ANALYSE IRM — NovaClinic
 ==========================================
 Date       : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
 Fichier    : {uploaded.name}

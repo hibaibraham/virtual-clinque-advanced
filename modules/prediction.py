@@ -189,7 +189,7 @@ def render():
 
 			# Export PDF-like rapport texte
 			section_label("📄 Rapport")
-			rapport = f"""RAPPORT DE DIAGNOSTIC — Virtual Clinic v3.1
+			rapport = f"""RAPPORT DE DIAGNOSTIC — NovaClinic v4.0
 ==========================================
 Date       : {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}
 Patient    : Âge {age} ans, {'Féminin' if sex_val==0 else 'Masculin'}

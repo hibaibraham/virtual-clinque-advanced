@@ -159,6 +159,6 @@ def footer():
     st.markdown("""
     <div class="pro-footer">
         <span class="status-dot"></span>
-        Virtual Clinic v3.1 &nbsp;·&nbsp; Random Forest &nbsp;·&nbsp; Streamlit &amp; scikit-learn
+        NovaClinic v4.0 &nbsp;·&nbsp; Random Forest &nbsp;·&nbsp; Streamlit &amp; scikit-learn
         <br><span style='font-size:0.72rem;opacity:0.6;'>Outil d'aide à la décision — ne remplace pas un avis médical professionnel</span>
     </div>""", unsafe_allow_html=True)

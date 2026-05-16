@@ -1,5 +1,5 @@
 """
-Virtual Clinic v3.1 — Diagnostic Intelligent
+NovaClinic v4.0 — Plateforme de Diagnostic Médical Intelligent
 Lancer : streamlit run app.py
 """
 import streamlit as st
@@ -7,8 +7,8 @@ from utils.core import inject_css, inject_bg, page_header
 from utils.auth import require_auth, get_user_role
 
 st.set_page_config(
-    page_title="Virtual Clinic",
-    page_icon="🧬",
+    page_title="NovaClinic",
+    page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -41,8 +41,8 @@ if user_role not in ["medecin", "secretaire"]:
 with st.sidebar:
     st.markdown("""
     <div class="sidebar-logo">
-        <span class="logo-icon">🧬</span>
-        <h2>Virtual Clinic</h2>
+        <span class="logo-icon">🏥</span>
+        <h2>NovaClinic</h2>
         <p>Système de Diagnostic Intelligent</p>
     </div>""", unsafe_allow_html=True)
 
@@ -85,7 +85,7 @@ with st.sidebar:
         <div style='margin-bottom:0.3rem;'>🧠 IRM : EfficientNet-B0</div>
         <div style='margin-bottom:0.3rem;'>🩸 PTDM : SVM / RF</div>
         <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain + PTDM</div>
-        <div>🔖 Version : 3.1</div>
+        <div>🔖 Version : 4.0 - NovaClinic</div>
     </div>""", unsafe_allow_html=True)
 
     # Déconnexion
@@ -423,7 +423,7 @@ elif page == "📜 Historique":
 
 elif page == "ℹ️ À Propos":
     page_header("ℹ️ Documentation",
-                "À Propos de Virtual Clinic",
+                "À Propos de NovaClinic",
                 "Architecture, pipeline ML et informations cliniques de référence")
     from modules.apropos import render
     render()
