@@ -74,8 +74,12 @@ with st.sidebar:
     
     page = st.radio("nav", pages,
                    index=pages.index(st.session_state.page),
-                   label_visibility="collapsed")
-    st.session_state.page = page
+                   label_visibility="collapsed",
+                   key="navigation_radio")
+    
+    # Mettre à jour la page seulement si elle a changé
+    if page != st.session_state.page:
+        st.session_state.page = page
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""

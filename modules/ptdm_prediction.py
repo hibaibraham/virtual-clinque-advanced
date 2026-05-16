@@ -83,6 +83,10 @@ def render():
 
             with st.spinner("Analyse du risque..."):
                 prediction, prob_patho, patient_data = model.predict(patient)
+            
+            # Sauvegarder la prédiction
+            from utils.core import save_prediction
+            save_prediction(patient_data, prediction, prob_patho, model_type='ptdm')
 
             badge = confidence_badge(prob_patho)
 

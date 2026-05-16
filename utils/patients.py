@@ -5,6 +5,7 @@ Supporte MongoDB avec fallback vers JSON/CSV
 import os
 import json
 import pandas as pd
+import streamlit as st
 from datetime import datetime
 from utils.database import get_patients_collection, is_mongodb_available
 
@@ -41,6 +42,10 @@ def create_patient(patient_data: dict) -> str:
     Crée un nouveau patient avec les informations de base.
     Retourne l'ID du patient.
     """
+    # Invalider le cache après création
+    get_all_patients.clear()
+    get_patients_by_status.clear()
+    
     # Générer un ID unique
     patient_id = f"PAT{datetime.now().strftime('%Y%m%d%H%M%S')}"
     
@@ -85,6 +90,7 @@ def create_patient(patient_data: dict) -> str:
     
     return patient_id
 
+@st.cache_data(ttl=10)  # Cache pendant 10 secondes
 def get_patient(patient_id: str) -> dict:
     """Récupère les informations d'un patient par son ID."""
     # Essayer MongoDB d'abord
@@ -105,6 +111,11 @@ def get_patient(patient_id: str) -> dict:
 
 def update_patient(patient_id: str, updates: dict):
     """Met à jour les informations d'un patient."""
+    # Invalider le cache après mise à jour
+    get_patient.clear()
+    get_all_patients.clear()
+    get_patients_by_status.clear()
+    
     updates["updated_at"] = datetime.now().isoformat()
     updates["updated_by"] = "medecin"  # À remplacer par l'utilisateur connecté
     
@@ -142,6 +153,7 @@ def update_patient(patient_id: str, updates: dict):
                     df_patients.loc[mask, key] = value
             _save_patients_csv(df_patients)
 
+@st.cache_data(ttl=10)  # Cache pendant 10 secondes
 def get_patients_by_status(status: str = "en_attente") -> list:
     """Récupère la liste des patients par statut."""
     # Essayer MongoDB d'abord
@@ -161,6 +173,7 @@ def get_patients_by_status(status: str = "en_attente") -> list:
     patients = _load_patients()
     return [patient for patient in patients.values() if patient.get("status") == status]
 
+@st.cache_data(ttl=10)  # Cache pendant 10 secondes
 def get_all_patients() -> list:
     """Récupère tous les patients."""
     # Essayer MongoDB d'abord
@@ -180,6 +193,7 @@ def get_all_patients() -> list:
     patients = _load_patients()
     return list(patients.values())
 
+@st.cache_data(ttl=5)  # Cache pendant 5 secondes
 def search_patients(search_term: str) -> list:
     """Recherche des patients par nom, prénom, ID, etc."""
     search_term = search_term.lower()

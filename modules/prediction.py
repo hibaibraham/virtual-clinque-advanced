@@ -94,7 +94,7 @@ def render():
 				proba         = model.predict_proba(X_proc)[0]
 				prob_patho    = proba[1]
 
-			save_prediction(patient, prediction, prob_patho)
+			save_prediction(patient, prediction, prob_patho, model_type='thyroid')
 
 			badge = confidence_badge(prob_patho)
 
