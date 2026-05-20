@@ -1,8 +1,24 @@
-torch>=2.0.0
-torchvision>=0.15.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-scikit-learn>=1.2.0
-Pillow>=9.5.0
-tqdm>=4.65.0
+# ─────────────────────────────────────────────────────────────
+# Brain Tumor Classifier — EfficientNet-B0 (PyTorch)
+# Installer : pip install -r requirements.txt
+# Pour PyTorch CPU :
+#   pip install torch==2.12.0 torchvision==0.27.0 --index-url https://download.pytorch.org/whl/cpu
+# Pour PyTorch GPU (CUDA 11.8) :
+#   pip install torch==2.12.0 torchvision==0.27.0 --index-url https://download.pytorch.org/whl/cu118
+# ─────────────────────────────────────────────────────────────
+
+# Deep Learning
+torch==2.12.0
+torchvision==0.27.0
+
+# Data & calcul
+numpy==2.3.5
+Pillow==12.0.0
+tqdm==4.67.1
+
+# Visualisation
+matplotlib==3.10.6
+seaborn==0.13.2
+
+# Évaluation
+scikit-learn==1.7.2
