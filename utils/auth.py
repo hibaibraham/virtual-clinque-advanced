@@ -13,7 +13,7 @@ from PIL import Image
 from utils.database import get_users_collection, is_mongodb_available
 
 USERS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'users.json')
-APP_NAME   = "MedAI Thyroid"
+APP_NAME   = "NovaClinic"
 
 
 # ── Persistance ──────────────────────────────────────────────────────────────
@@ -392,26 +392,46 @@ def require_auth():
         _, col_center, _ = st.columns([1, 2, 1])
         
         with col_center:
-            # Logo
+            # Logo professionnel NovaClinic
             st.markdown("""
-            <div style='text-align:center;margin-bottom:1.5rem;'>
-                <div style='font-size:2.2rem;margin-bottom:0.4rem;color:#00d4ff;'>🏥</div>
-                <h1 style='margin:0;font-size:1.3rem;font-weight:600;color:#f1f5f9;'>Clinique Virtuelle</h1>
-                <p style='margin:0.3rem 0 0;font-size:0.8rem;color:#94a3b8;'>Sélectionnez votre espace</p>
+            <div style='text-align:center;margin-bottom:2rem;'>
+                <div style='background:linear-gradient(135deg, #00d4ff, #7c3aed);
+                            width:80px;height:80px;border-radius:20px;margin:0 auto 1rem;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 8px 32px rgba(0,212,255,0.3);'>
+                    <span style='font-size:2.5rem;'>🏥</span>
+                </div>
+                <h1 style='margin:0;font-size:2rem;font-weight:700;
+                           background:linear-gradient(90deg, #00d4ff, #7c3aed);
+                           -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                           background-clip:text;'>NovaClinic</h1>
+                <p style='margin:0.5rem 0 0;font-size:0.9rem;color:#94a3b8;font-weight:500;'>
+                    Plateforme de Diagnostic Médical Intelligent
+                </p>
+                <div style='width:60px;height:3px;background:linear-gradient(90deg, #00d4ff, #7c3aed);
+                            margin:1rem auto;border-radius:2px;'></div>
+                <p style='margin:0.5rem 0 0;font-size:0.85rem;color:#64748b;'>
+                    Sélectionnez votre espace de travail
+                </p>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
             
-            # Boutons de sélection
-            col1, col2 = st.columns(2, gap="small")
+            # Boutons de sélection avec design amélioré
+            col1, col2 = st.columns(2, gap="medium")
             
             with col1:
                 st.markdown("""
-                <div style='padding:1rem 0.6rem;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.08));
-                            border:2px solid rgba(0,212,255,0.25);border-radius:12px;text-align:center;margin-bottom:0.6rem;'>
-                    <div style='font-size:1.8rem;margin-bottom:0.4rem;'>👨‍⚕️</div>
-                    <div style='font-size:0.9rem;font-weight:600;color:#f1f5f9;'>Médecin</div>
+                <div style='padding:1.5rem 1rem;
+                            background:linear-gradient(135deg, rgba(0,212,255,0.1), rgba(124,58,237,0.05));
+                            border:2px solid rgba(0,212,255,0.3);
+                            border-radius:16px;text-align:center;
+                            transition:all 0.3s;cursor:pointer;
+                            box-shadow:0 4px 16px rgba(0,212,255,0.1);'>
+                    <div style='font-size:2.5rem;margin-bottom:0.6rem;'>👨‍⚕️</div>
+                    <div style='font-size:1rem;font-weight:600;color:#f1f5f9;margin-bottom:0.3rem;'>Médecin</div>
+                    <div style='font-size:0.75rem;color:#94a3b8;'>Diagnostic & Analyse</div>
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("Accéder", use_container_width=True, key="btn_medecin"):
@@ -421,16 +441,31 @@ def require_auth():
             
             with col2:
                 st.markdown("""
-                <div style='padding:1rem 0.6rem;background:linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.08));
-                            border:2px solid rgba(0,212,255,0.25);border-radius:12px;text-align:center;margin-bottom:0.6rem;'>
-                    <div style='font-size:1.8rem;margin-bottom:0.4rem;'>📋</div>
-                    <div style='font-size:0.9rem;font-weight:600;color:#f1f5f9;'>Secrétaire</div>
+                <div style='padding:1.5rem 1rem;
+                            background:linear-gradient(135deg, rgba(236,72,153,0.1), rgba(124,58,237,0.05));
+                            border:2px solid rgba(236,72,153,0.3);
+                            border-radius:16px;text-align:center;
+                            transition:all 0.3s;cursor:pointer;
+                            box-shadow:0 4px 16px rgba(236,72,153,0.1);'>
+                    <div style='font-size:2.5rem;margin-bottom:0.6rem;'>📋</div>
+                    <div style='font-size:1rem;font-weight:600;color:#f1f5f9;margin-bottom:0.3rem;'>Secrétaire</div>
+                    <div style='font-size:0.75rem;color:#94a3b8;'>Gestion Administrative</div>
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("Accéder", use_container_width=True, key="btn_secretaire"):
                     st.session_state.selected_role = "secretaire"
                     st.session_state.auth_step = "login"
                     st.rerun()
+            
+            # Footer
+            st.markdown("""
+            <div style='text-align:center;margin-top:2rem;padding-top:1.5rem;
+                        border-top:1px solid rgba(255,255,255,0.05);'>
+                <p style='font-size:0.75rem;color:#64748b;margin:0;'>
+                    🔒 Connexion sécurisée avec authentification 2FA
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
         
         st.stop()
 
@@ -447,8 +482,16 @@ def require_auth():
             # Logo avec rôle sélectionné
             st.markdown(f"""
             <div style='text-align:center;margin-bottom:1.5rem;'>
-                <div style='font-size:2.2rem;margin-bottom:0.4rem;color:#00d4ff;'>{role_icons.get(selected_role, "🔐")}</div>
-                <h1 style='margin:0;font-size:1.3rem;font-weight:600;color:#f1f5f9;'>Connexion {role_names.get(selected_role, "")}</h1>
+                <div style='background:linear-gradient(135deg, #00d4ff, #7c3aed);
+                            width:70px;height:70px;border-radius:16px;margin:0 auto 1rem;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 8px 32px rgba(0,212,255,0.3);'>
+                    <span style='font-size:2rem;'>{role_icons.get(selected_role, "🔐")}</span>
+                </div>
+                <h1 style='margin:0;font-size:1.5rem;font-weight:700;color:#f1f5f9;'>
+                    Connexion {role_names.get(selected_role, "")}
+                </h1>
+                <p style='margin:0.3rem 0 0;font-size:0.85rem;color:#94a3b8;'>NovaClinic</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -504,8 +547,14 @@ def require_auth():
             if not is_totp_verified(username):
                 st.markdown("""
                 <div style='text-align:center;margin-bottom:1.5rem;'>
-                    <div style='font-size:2.2rem;margin-bottom:0.4rem;color:#00d4ff;'>📱</div>
-                    <h1 style='margin:0;font-size:1.3rem;font-weight:600;color:#f1f5f9;'>Configuration 2FA</h1>
+                    <div style='background:linear-gradient(135deg, #00d4ff, #7c3aed);
+                                width:70px;height:70px;border-radius:16px;margin:0 auto 1rem;
+                                display:flex;align-items:center;justify-content:center;
+                                box-shadow:0 8px 32px rgba(0,212,255,0.3);'>
+                        <span style='font-size:2rem;'>📱</span>
+                    </div>
+                    <h1 style='margin:0;font-size:1.5rem;font-weight:700;color:#f1f5f9;'>Configuration 2FA</h1>
+                    <p style='margin:0.3rem 0 0;font-size:0.85rem;color:#94a3b8;'>NovaClinic</p>
                 </div>""", unsafe_allow_html=True)
                 
                 st.markdown("""
@@ -527,8 +576,14 @@ def require_auth():
             else:
                 st.markdown("""
                 <div style='text-align:center;margin-bottom:1.5rem;'>
-                    <div style='font-size:2.2rem;margin-bottom:0.4rem;color:#00d4ff;'>🔐</div>
-                    <h1 style='margin:0;font-size:1.3rem;font-weight:600;color:#f1f5f9;'>Vérification 2FA</h1>
+                    <div style='background:linear-gradient(135deg, #00d4ff, #7c3aed);
+                                width:70px;height:70px;border-radius:16px;margin:0 auto 1rem;
+                                display:flex;align-items:center;justify-content:center;
+                                box-shadow:0 8px 32px rgba(0,212,255,0.3);'>
+                        <span style='font-size:2rem;'>🔐</span>
+                    </div>
+                    <h1 style='margin:0;font-size:1.5rem;font-weight:700;color:#f1f5f9;'>Vérification 2FA</h1>
+                    <p style='margin:0.3rem 0 0;font-size:0.85rem;color:#94a3b8;'>NovaClinic</p>
                 </div>""", unsafe_allow_html=True)
 
             code = st.text_input("Code à 6 chiffres", placeholder="000000", max_chars=6)
@@ -565,8 +620,16 @@ def require_auth():
         with col_center:
             st.markdown(f"""
             <div style='text-align:center;margin-bottom:1.5rem;'>
-                <div style='font-size:2.2rem;margin-bottom:0.4rem;color:#00d4ff;'>{role_icons.get(selected_role, "🧬")}</div>
-                <h1 style='margin:0;font-size:1.3rem;font-weight:600;color:#f1f5f9;'>Créer un compte {role_names.get(selected_role, "")}</h1>
+                <div style='background:linear-gradient(135deg, #00d4ff, #7c3aed);
+                            width:70px;height:70px;border-radius:16px;margin:0 auto 1rem;
+                            display:flex;align-items:center;justify-content:center;
+                            box-shadow:0 8px 32px rgba(0,212,255,0.3);'>
+                    <span style='font-size:2rem;'>{role_icons.get(selected_role, "🧬")}</span>
+                </div>
+                <h1 style='margin:0;font-size:1.5rem;font-weight:700;color:#f1f5f9;'>
+                    Créer un compte {role_names.get(selected_role, "")}
+                </h1>
+                <p style='margin:0.3rem 0 0;font-size:0.85rem;color:#94a3b8;'>NovaClinic</p>
             </div>""", unsafe_allow_html=True)
 
             new_user = st.text_input("Nom d'utilisateur", placeholder="Votre identifiant", key="reg_user")

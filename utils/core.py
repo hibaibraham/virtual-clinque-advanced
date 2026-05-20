@@ -97,21 +97,57 @@ def compute_engineered_features(row: dict) -> dict:
     return row
 
 
-def save_prediction(patient_data: dict, prediction: int, probability: float):
-    # Sauvegarde locale uniquement (CSV)
+def save_prediction(patient_data: dict, prediction, probability: float, model_type: str = 'thyroid', patient_name: str = None):
+    """
+    Sauvegarde une prédiction dans MongoDB et CSV local.
+    
+    Args:
+        patient_data: Données du patient
+        prediction: Prédiction (int pour thyroid/ptdm, str pour brain_cancer)
+        probability: Probabilité/confiance
+        model_type: Type de modèle ('thyroid', 'brain_cancer', 'ptdm')
+        patient_name: Nom du patient (optionnel)
+    """
+    from utils.database import get_predictions_collection, is_mongodb_available
+    
+    # Préparer l'enregistrement
     record = {
-        'timestamp':  datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'prediction': 'Pathologique' if prediction == 1 else 'Normal',
-        'probability': f"{probability:.1%}",
-        **{k: v for k, v in patient_data.items()}
+        'timestamp': datetime.now().isoformat(),
+        'model_type': model_type,
+        'prediction': prediction,
+        'probability': probability,
+        'patient_name': patient_name or 'Anonyme',
+        **patient_data
     }
-    df_new = pd.DataFrame([record])
+    
+    # Essayer MongoDB d'abord
+    if is_mongodb_available():
+        collection = get_predictions_collection()
+        if collection is not None:
+            try:
+                collection.insert_one(record.copy())
+            except Exception as e:
+                print(f"⚠️ Erreur MongoDB, fallback vers CSV: {e}")
+    
+    # Sauvegarde locale (CSV) - fallback
+    # Formater pour compatibilité avec l'ancien format
+    csv_record = {
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'model_type': model_type,
+        'patient_name': patient_name or 'Anonyme',
+        'prediction': prediction,
+        'probability': f"{probability:.1%}" if isinstance(probability, float) else probability,
+        **{k: v for k, v in patient_data.items() if not isinstance(v, (dict, list))}
+    }
+    
+    df_new = pd.DataFrame([csv_record])
     if os.path.exists(HISTORY_PATH):
         df_hist = pd.read_csv(HISTORY_PATH)
         df_hist = pd.concat([df_hist, df_new], ignore_index=True)
     else:
         df_hist = df_new
     df_hist.to_csv(HISTORY_PATH, index=False)
+    
     return record
 
 
@@ -159,6 +195,6 @@ def footer():
     st.markdown("""
     <div class="pro-footer">
         <span class="status-dot"></span>
-        MedAI Thyroid v3.0 &nbsp;·&nbsp; Random Forest &nbsp;·&nbsp; Streamlit &amp; scikit-learn
+        NovaClinic v4.0 &nbsp;·&nbsp; Random Forest &nbsp;·&nbsp; Streamlit &amp; scikit-learn
         <br><span style='font-size:0.72rem;opacity:0.6;'>Outil d'aide à la décision — ne remplace pas un avis médical professionnel</span>
     </div>""", unsafe_allow_html=True)

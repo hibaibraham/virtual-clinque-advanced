@@ -1,5 +1,5 @@
 """
-MedAI Thyroid v3.0 — Diagnostic Thyroïdien Intelligent
+NovaClinic v4.0 — Plateforme de Diagnostic Médical Intelligent
 Lancer : streamlit run app.py
 """
 import streamlit as st
@@ -7,8 +7,8 @@ from utils.core import inject_css, inject_bg, page_header
 from utils.auth import require_auth, get_user_role
 
 st.set_page_config(
-    page_title="MedAI — Diagnostic Clinique Intelligent",
-    page_icon="🧬",
+    page_title="NovaClinic",
+    page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -41,8 +41,8 @@ if user_role not in ["medecin", "secretaire"]:
 with st.sidebar:
     st.markdown("""
     <div class="sidebar-logo">
-        <span class="logo-icon">🧬</span>
-        <h2>MedAI Thyroid</h2>
+        <span class="logo-icon">🏥</span>
+        <h2>NovaClinic</h2>
         <p>Système de Diagnostic Intelligent</p>
     </div>""", unsafe_allow_html=True)
 
@@ -62,7 +62,7 @@ with st.sidebar:
 
     # Pages selon le rôle
     if user_role == "medecin":
-        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📜 Historique", "ℹ️ À Propos"]
+        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "🩸 Analyse PTDM", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📊 Dashboard PTDM", "📜 Historique", "ℹ️ À Propos"]
     elif user_role == "secretaire":
         pages = ["📋 Accueil", "➕ Nouveau Patient", "👥 Liste Patients", "📅 Rendez-vous", "📊 Statistiques"]
     else:
@@ -74,8 +74,12 @@ with st.sidebar:
     
     page = st.radio("nav", pages,
                    index=pages.index(st.session_state.page),
-                   label_visibility="collapsed")
-    st.session_state.page = page
+                   label_visibility="collapsed",
+                   key="navigation_radio")
+    
+    # Mettre à jour la page seulement si elle a changé
+    if page != st.session_state.page:
+        st.session_state.page = page
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
@@ -83,8 +87,9 @@ with st.sidebar:
         <div style='margin-bottom:0.4rem;'><span class='status-dot'></span> Système opérationnel</div>
         <div style='margin-bottom:0.3rem;'>🤖 Thyroïde : Random Forest</div>
         <div style='margin-bottom:0.3rem;'>🧠 IRM : EfficientNet-B0</div>
-        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain MRI</div>
-        <div>🔖 Version : 3.1</div>
+        <div style='margin-bottom:0.3rem;'>🩸 PTDM : SVM / RF</div>
+        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain + PTDM</div>
+        <div>🔖 Version : 4.0 - NovaClinic</div>
     </div>""", unsafe_allow_html=True)
 
     # Déconnexion
@@ -399,6 +404,20 @@ elif page == "📊 Dashboard Cancer":
     from modules.brain_tumor_dashboard import render
     render()
 
+elif page == "🩸 Analyse PTDM":
+    page_header("🩸 Module PTDM",
+                "Diagnostic Diabète Post-Transplantation",
+                "Évaluez le risque de diabète à partir des paramètres cliniques du patient et du donneur")
+    from modules.ptdm_prediction import render
+    render()
+
+elif page == "📊 Dashboard PTDM":
+    page_header("📊 Analytics PTDM",
+                "Tableau de Bord PTDM",
+                "Statistiques sur les transplantations et la prévalence du risque PTDM")
+    from modules.ptdm_dashboard import render
+    render()
+
 elif page == "📜 Historique":
     page_header("📜 Registre Médical",
                 "Historique des Prédictions",
@@ -408,7 +427,7 @@ elif page == "📜 Historique":
 
 elif page == "ℹ️ À Propos":
     page_header("ℹ️ Documentation",
-                "À Propos de MedAI Thyroid",
+                "À Propos de NovaClinic",
                 "Architecture, pipeline ML et informations cliniques de référence")
     from modules.apropos import render
     render()

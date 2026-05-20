@@ -94,7 +94,7 @@ def render():
 				proba         = model.predict_proba(X_proc)[0]
 				prob_patho    = proba[1]
 
-			save_prediction(patient, prediction, prob_patho)
+			save_prediction(patient, prediction, prob_patho, model_type='thyroid')
 
 			badge = confidence_badge(prob_patho)
 
@@ -189,7 +189,7 @@ def render():
 
 			# Export PDF-like rapport texte
 			section_label("📄 Rapport")
-			rapport = f"""RAPPORT DE DIAGNOSTIC — MedAI Thyroid v3.0
+			rapport = f"""RAPPORT DE DIAGNOSTIC — NovaClinic v4.0
 ==========================================
 Date       : {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}
 Patient    : Âge {age} ans, {'Féminin' if sex_val==0 else 'Masculin'}

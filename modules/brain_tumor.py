@@ -251,6 +251,16 @@ def render():
         conf  = result["confidence"]
         color = CLASS_COLORS.get(cls, "#7f8c8d")
         label = CLASS_LABELS_FR.get(cls, cls)
+        
+        # Sauvegarder la prédiction
+        from utils.core import save_prediction
+        patient_data = {
+            'image_name': uploaded.name if uploaded else 'unknown',
+            'confidence': conf,
+            'has_tumor': result["has_tumor"],
+            'uncertain': result["uncertain"]
+        }
+        save_prediction(patient_data, cls, conf, model_type='brain_cancer')
 
         # ── Carte résultat ─────────────────────────────────────────────────────
         if result["uncertain"]:
@@ -322,7 +332,7 @@ def render():
         # ── Rapport téléchargeable ─────────────────────────────────────────────
         section_label("📄 Rapport")
         import datetime
-        rapport = f"""RAPPORT D'ANALYSE IRM — MedAI Brain Tumor
+        rapport = f"""RAPPORT D'ANALYSE IRM — NovaClinic
 ==========================================
 Date       : {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
 Fichier    : {uploaded.name}
