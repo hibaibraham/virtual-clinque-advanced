@@ -62,7 +62,7 @@ with st.sidebar:
 
     # Pages selon le rôle
     if user_role == "medecin":
-        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "🩸 Analyse PTDM", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📊 Dashboard PTDM", "📜 Historique", "ℹ️ À Propos"]
+        pages = ["👨‍⚕️ Interface Médecin", "🦋 Analyse Thyroïde", "🧠 Tumeur Cérébrale", "🩸 Analyse PTDM", "🦷 Analyse Dentaire", "📊 Dashboard Thyroïde", "📊 Dashboard Cancer", "📊 Dashboard PTDM", "📊 Dashboard Dentaire", "📜 Historique", "ℹ️ À Propos"]
     elif user_role == "secretaire":
         pages = ["📋 Accueil", "➕ Nouveau Patient", "👥 Liste Patients", "📅 Rendez-vous", "📊 Statistiques"]
     else:
@@ -88,8 +88,9 @@ with st.sidebar:
         <div style='margin-bottom:0.3rem;'>🤖 Thyroïde : Random Forest</div>
         <div style='margin-bottom:0.3rem;'>🧠 IRM : EfficientNet-B0</div>
         <div style='margin-bottom:0.3rem;'>🩸 PTDM : SVM / RF</div>
-        <div style='margin-bottom:0.3rem;'>📦 Dataset : Thyroid + Brain + PTDM</div>
-        <div>🔖 Version : 4.0 - NovaClinic</div>
+        <div style='margin-bottom:0.3rem;'>🦷 Dentaire : ResNet18</div>
+        <div style='margin-bottom:0.3rem;'>📦 Dataset : Multi-Modal</div>
+        <div>🔖 Version : 4.1 - NovaClinic</div>
     </div>""", unsafe_allow_html=True)
 
     # Déconnexion
@@ -411,11 +412,25 @@ elif page == "🩸 Analyse PTDM":
     from modules.ptdm_prediction import render
     render()
 
+elif page == "🦷 Analyse Dentaire":
+    page_header("🦷 Module Dentaire",
+                "Classification de Radiographies Dentaires",
+                "Analysez une radiographie dentaire — classification en 5 classes par ResNet18")
+    from modules.tooth_analysis import render
+    render()
+
 elif page == "📊 Dashboard PTDM":
     page_header("📊 Analytics PTDM",
                 "Tableau de Bord PTDM",
                 "Statistiques sur les transplantations et la prévalence du risque PTDM")
     from modules.ptdm_dashboard import render
+    render()
+
+elif page == "📊 Dashboard Dentaire":
+    page_header("📊 Analytics Dentaire",
+                "Tableau de Bord Analyse Dentaire",
+                "Statistiques et performances du modèle ResNet18 pour la classification dentaire")
+    from modules.tooth_dashboard import render
     render()
 
 elif page == "📜 Historique":

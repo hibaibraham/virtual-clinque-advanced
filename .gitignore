@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models (too large for Git)
+*.pth
+*.h5
+*.pkl
+*.joblib
+*.model
+
+# Data
+*.csv
+*.json
+backup_before_mongodb/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# MongoDB
+*.lock
+
+# Temporary files
+*.tmp
+*.bak

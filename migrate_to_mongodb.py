@@ -1,251 +1,293 @@
 """
-Script de migration des données JSON/CSV vers MongoDB
-Exécuter : python migrate_to_mongodb.py
+Script de Migration des Données vers MongoDB
+Migre les données de JSON/CSV vers MongoDB
 """
 import json
 import os
-import pandas as pd
-from utils.database import (
-    get_database, 
-    get_users_collection, 
-    get_patients_collection,
-    get_predictions_collection,
-    create_indexes,
-    is_mongodb_available
-)
+from datetime import datetime
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, DuplicateKeyError
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-USERS_PATH = os.path.join(BASE_DIR, 'users.json')
-PATIENTS_PATH = os.path.join(BASE_DIR, 'patients.json')
-PREDICTIONS_CSV_PATH = os.path.join(BASE_DIR, 'predictions.csv')
+# Configuration
+MONGODB_URI = "mongodb://localhost:27017/"
+DATABASE_NAME = "clinique_virtuelle"
 
-def migrate_users():
-    """Migre les utilisateurs de users.json vers MongoDB."""
-    print("\n📤 Migration des utilisateurs...")
+# Chemins des fichiers
+USERS_JSON = "users.json"
+PATIENTS_JSON = "patients.json"
+
+def test_connection():
+    """Teste la connexion à MongoDB."""
+    try:
+        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        client.admin.command('ping')
+        print("✅ Connexion à MongoDB réussie!")
+        return client
+    except ConnectionFailure as e:
+        print(f"❌ Erreur de connexion à MongoDB: {e}")
+        print("\n⚠️  Assurez-vous que MongoDB est démarré:")
+        print("   1. Exécutez 'start_mongodb.bat' en tant qu'administrateur")
+        print("   2. Ou démarrez le service MongoDB manuellement")
+        return None
+
+def migrate_users(db):
+    """Migre les utilisateurs de JSON vers MongoDB."""
+    print("\n📊 Migration des utilisateurs...")
     
-    if not os.path.exists(USERS_PATH):
-        print("⚠️ Fichier users.json introuvable")
+    if not os.path.exists(USERS_JSON):
+        print(f"⚠️  Fichier {USERS_JSON} introuvable. Aucun utilisateur à migrer.")
         return 0
     
-    with open(USERS_PATH, 'r', encoding='utf-8') as f:
+    with open(USERS_JSON, 'r', encoding='utf-8') as f:
         users_data = json.load(f)
     
-    users_collection = get_users_collection()
-    if users_collection is None:
-        print("❌ Collection users non disponible")
+    if not users_data:
+        print("ℹ️  Aucun utilisateur à migrer.")
         return 0
     
-    # Supprimer les données existantes (optionnel)
-    users_collection.delete_many({})
-    
+    collection = db.users
     migrated = 0
+    skipped = 0
+    
     for username, user_info in users_data.items():
-        user_doc = {
-            "username": username,
-            "password": user_info.get("password"),
-            "totp_secret": user_info.get("totp_secret"),
-            "totp_verified": user_info.get("totp_verified", False),
-            "role": user_info.get("role", "patient"),
-            "created_at": user_info.get("created_at", None)
-        }
-        
         try:
-            users_collection.insert_one(user_doc)
+            # Ajouter le username dans le document
+            user_doc = {
+                "username": username,
+                **user_info,
+                "migrated_at": datetime.now().isoformat()
+            }
+            
+            # Insérer ou mettre à jour
+            collection.update_one(
+                {"username": username},
+                {"$set": user_doc},
+                upsert=True
+            )
             migrated += 1
-            print(f"  ✅ {username} ({user_info.get('role', 'patient')})")
+            print(f"  ✅ {username} migré")
+            
         except Exception as e:
             print(f"  ❌ Erreur pour {username}: {e}")
+            skipped += 1
     
-    print(f"✅ {migrated}/{len(users_data)} utilisateurs migrés")
+    print(f"\n✅ Utilisateurs migrés: {migrated}")
+    if skipped > 0:
+        print(f"⚠️  Utilisateurs ignorés: {skipped}")
+    
     return migrated
 
-def migrate_patients():
-    """Migre les patients de patients.json vers MongoDB."""
-    print("\n📤 Migration des patients...")
+def migrate_patients(db):
+    """Migre les patients de JSON vers MongoDB."""
+    print("\n📊 Migration des patients...")
     
-    if not os.path.exists(PATIENTS_PATH):
-        print("⚠️ Fichier patients.json introuvable")
+    if not os.path.exists(PATIENTS_JSON):
+        print(f"⚠️  Fichier {PATIENTS_JSON} introuvable. Aucun patient à migrer.")
         return 0
     
-    with open(PATIENTS_PATH, 'r', encoding='utf-8') as f:
+    with open(PATIENTS_JSON, 'r', encoding='utf-8') as f:
         patients_data = json.load(f)
     
-    patients_collection = get_patients_collection()
-    if patients_collection is None:
-        print("❌ Collection patients non disponible")
+    if not patients_data:
+        print("ℹ️  Aucun patient à migrer.")
         return 0
     
-    # Supprimer les données existantes (optionnel)
-    patients_collection.delete_many({})
-    
+    collection = db.patients
     migrated = 0
+    skipped = 0
+    
     for patient_id, patient_info in patients_data.items():
         try:
-            patients_collection.insert_one(patient_info)
+            # Ajouter le patient_id dans le document si absent
+            if "patient_id" not in patient_info:
+                patient_info["patient_id"] = patient_id
+            
+            patient_info["migrated_at"] = datetime.now().isoformat()
+            
+            # Insérer ou mettre à jour
+            collection.update_one(
+                {"patient_id": patient_id},
+                {"$set": patient_info},
+                upsert=True
+            )
             migrated += 1
-            print(f"  ✅ {patient_id} - {patient_info.get('prenom', '')} {patient_info.get('nom', '')}")
+            print(f"  ✅ {patient_id} - {patient_info.get('nom', '')} {patient_info.get('prenom', '')} migré")
+            
         except Exception as e:
             print(f"  ❌ Erreur pour {patient_id}: {e}")
+            skipped += 1
     
-    print(f"✅ {migrated}/{len(patients_data)} patients migrés")
+    print(f"\n✅ Patients migrés: {migrated}")
+    if skipped > 0:
+        print(f"⚠️  Patients ignorés: {skipped}")
+    
     return migrated
 
-def migrate_predictions():
-    """Migre les prédictions de predictions.csv vers MongoDB."""
-    print("\n📤 Migration des prédictions...")
-    
-    if not os.path.exists(PREDICTIONS_CSV_PATH):
-        print("⚠️ Fichier predictions.csv introuvable")
-        return 0
+def create_indexes(db):
+    """Crée les index pour optimiser les recherches."""
+    print("\n📊 Création des index...")
     
     try:
-        df = pd.read_csv(PREDICTIONS_CSV_PATH)
+        # Index pour les patients
+        db.patients.create_index("patient_id", unique=True)
+        db.patients.create_index("nom")
+        db.patients.create_index("prenom")
+        db.patients.create_index("telephone")
+        db.patients.create_index("status")
+        db.patients.create_index("created_at")
+        print("  ✅ Index patients créés")
+        
+        # Index pour les utilisateurs
+        db.users.create_index("username", unique=True)
+        db.users.create_index("role")
+        print("  ✅ Index utilisateurs créés")
+        
+        # Index pour les rendez-vous
+        db.appointments.create_index("patient_id")
+        db.appointments.create_index("date")
+        db.appointments.create_index("status")
+        print("  ✅ Index rendez-vous créés")
+        
+        # Index pour les prédictions
+        db.predictions.create_index("timestamp")
+        db.predictions.create_index("username")
+        print("  ✅ Index prédictions créés")
+        
+        print("\n✅ Tous les index ont été créés avec succès!")
+        
     except Exception as e:
-        print(f"❌ Erreur lecture CSV: {e}")
-        return 0
-    
-    predictions_collection = get_predictions_collection()
-    if predictions_collection is None:
-        print("❌ Collection predictions non disponible")
-        return 0
-    
-    # Supprimer les données existantes (optionnel)
-    predictions_collection.delete_many({})
-    
-    migrated = 0
-    for _, row in df.iterrows():
-        prediction_doc = row.to_dict()
-        
-        try:
-            predictions_collection.insert_one(prediction_doc)
-            migrated += 1
-        except Exception as e:
-            print(f"  ❌ Erreur: {e}")
-    
-    print(f"✅ {migrated}/{len(df)} prédictions migrées")
-    return migrated
+        print(f"⚠️  Erreur lors de la création des index: {e}")
 
-def backup_files():
-    """Crée des backups des fichiers JSON/CSV avant migration."""
-    print("\n💾 Création des backups...")
+def show_statistics(db):
+    """Affiche les statistiques de la base de données."""
+    print("\n" + "="*60)
+    print("📊 STATISTIQUES DE LA BASE DE DONNÉES")
+    print("="*60)
     
-    backup_dir = os.path.join(BASE_DIR, 'backup_before_mongodb')
-    os.makedirs(backup_dir, exist_ok=True)
+    # Utilisateurs
+    users_count = db.users.count_documents({})
+    print(f"\n👥 Utilisateurs: {users_count}")
     
-    files_to_backup = [
-        USERS_PATH,
-        PATIENTS_PATH,
-        PREDICTIONS_CSV_PATH
-    ]
+    if users_count > 0:
+        roles = db.users.aggregate([
+            {"$group": {"_id": "$role", "count": {"$sum": 1}}}
+        ])
+        for role in roles:
+            print(f"   - {role['_id']}: {role['count']}")
     
-    for file_path in files_to_backup:
-        if os.path.exists(file_path):
-            filename = os.path.basename(file_path)
-            backup_path = os.path.join(backup_dir, filename)
-            
-            try:
-                if file_path.endswith('.json'):
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    with open(backup_path, 'w', encoding='utf-8') as f:
-                        json.dump(data, f, indent=2, ensure_ascii=False)
-                else:
-                    df = pd.read_csv(file_path)
-                    df.to_csv(backup_path, index=False)
-                
-                print(f"  ✅ {filename} → backup/")
-            except Exception as e:
-                print(f"  ❌ Erreur backup {filename}: {e}")
+    # Patients
+    patients_count = db.patients.count_documents({})
+    print(f"\n🏥 Patients: {patients_count}")
     
-    print(f"✅ Backups créés dans: {backup_dir}")
+    if patients_count > 0:
+        statuses = db.patients.aggregate([
+            {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+        ])
+        for status in statuses:
+            print(f"   - {status['_id']}: {status['count']}")
+    
+    # Rendez-vous
+    appointments_count = db.appointments.count_documents({})
+    print(f"\n📅 Rendez-vous: {appointments_count}")
+    
+    # Prédictions
+    predictions_count = db.predictions.count_documents({})
+    print(f"\n🔬 Prédictions: {predictions_count}")
+    
+    print("\n" + "="*60)
 
-def verify_migration():
-    """Vérifie que la migration s'est bien passée."""
-    print("\n🔍 Vérification de la migration...")
+def backup_json_files():
+    """Crée une sauvegarde des fichiers JSON avant migration."""
+    print("\n💾 Création de sauvegardes...")
     
-    users_collection = get_users_collection()
-    patients_collection = get_patients_collection()
-    predictions_collection = get_predictions_collection()
+    backup_dir = "backup_before_mongodb"
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
     
-    if users_collection is not None:
-        users_count = users_collection.count_documents({})
-        print(f"  👥 Utilisateurs dans MongoDB: {users_count}")
+    files_to_backup = [USERS_JSON, PATIENTS_JSON]
+    backed_up = 0
     
-    if patients_collection is not None:
-        patients_count = patients_collection.count_documents({})
-        print(f"  🏥 Patients dans MongoDB: {patients_count}")
-        
-        # Compter par statut
-        en_attente = patients_collection.count_documents({"status": "en_attente"})
-        en_cours = patients_collection.count_documents({"status": "en_cours"})
-        complete = patients_collection.count_documents({"status": "complete"})
-        
-        print(f"    ⏳ En attente: {en_attente}")
-        print(f"    🔄 En cours: {en_cours}")
-        print(f"    ✅ Complets: {complete}")
+    for file in files_to_backup:
+        if os.path.exists(file):
+            backup_path = os.path.join(backup_dir, file)
+            with open(file, 'r', encoding='utf-8') as src:
+                with open(backup_path, 'w', encoding='utf-8') as dst:
+                    dst.write(src.read())
+            print(f"  ✅ {file} sauvegardé")
+            backed_up += 1
     
-    if predictions_collection is not None:
-        predictions_count = predictions_collection.count_documents({})
-        print(f"  🔬 Prédictions dans MongoDB: {predictions_count}")
+    if backed_up > 0:
+        print(f"\n✅ {backed_up} fichier(s) sauvegardé(s) dans '{backup_dir}/'")
+    else:
+        print("ℹ️  Aucun fichier à sauvegarder")
 
 def main():
     """Fonction principale de migration."""
-    print("=" * 60)
-    print("🚀 MIGRATION VERS MONGODB")
-    print("=" * 60)
+    print("="*60)
+    print("  🔄 MIGRATION DES DONNÉES VERS MONGODB")
+    print("  NovaClinic v4.1")
+    print("="*60)
     
-    # Vérifier la connexion MongoDB
-    if not is_mongodb_available():
-        print("\n❌ MongoDB n'est pas disponible!")
-        print("\n📋 Instructions:")
-        print("  1. Installer MongoDB: https://www.mongodb.com/try/download/community")
-        print("  2. Démarrer MongoDB: mongod")
-        print("  3. Ou utiliser MongoDB Atlas (cloud)")
-        print("  4. Configurer MONGODB_URI dans .env ou utils/database.py")
+    # Tester la connexion
+    client = test_connection()
+    if not client:
+        print("\n❌ Migration annulée. Veuillez démarrer MongoDB d'abord.")
         return
     
-    print("\n✅ Connexion MongoDB établie")
+    # Sélectionner la base de données
+    db = client[DATABASE_NAME]
+    print(f"✅ Base de données: {DATABASE_NAME}")
     
     # Demander confirmation
-    print("\n⚠️  ATTENTION:")
-    print("  - Cette opération va migrer toutes les données vers MongoDB")
-    print("  - Les données MongoDB existantes seront écrasées")
-    print("  - Un backup sera créé dans backup_before_mongodb/")
-    
-    response = input("\n❓ Continuer la migration? (oui/non): ").strip().lower()
+    print("\n⚠️  Cette opération va migrer vos données vers MongoDB.")
+    print("   Les fichiers JSON seront sauvegardés avant la migration.")
+    response = input("\n❓ Voulez-vous continuer? (oui/non): ").lower().strip()
     
     if response not in ['oui', 'o', 'yes', 'y']:
-        print("\n❌ Migration annulée")
+        print("\n❌ Migration annulée par l'utilisateur.")
         return
     
-    # Créer les backups
-    backup_files()
+    # Créer des sauvegardes
+    backup_json_files()
     
-    # Effectuer les migrations
-    users_migrated = migrate_users()
-    patients_migrated = migrate_patients()
-    predictions_migrated = migrate_predictions()
+    # Migrer les données
+    users_migrated = migrate_users(db)
+    patients_migrated = migrate_patients(db)
     
     # Créer les index
-    print("\n📊 Création des index...")
-    create_indexes()
+    create_indexes(db)
     
-    # Vérifier la migration
-    verify_migration()
+    # Afficher les statistiques
+    show_statistics(db)
     
     # Résumé
-    print("\n" + "=" * 60)
-    print("✅ MIGRATION TERMINÉE")
-    print("=" * 60)
-    print(f"  👥 Utilisateurs: {users_migrated}")
-    print(f"  🏥 Patients: {patients_migrated}")
-    print(f"  🔬 Prédictions: {predictions_migrated}")
+    print("\n" + "="*60)
+    print("✅ MIGRATION TERMINÉE AVEC SUCCÈS!")
+    print("="*60)
+    print(f"\n📊 Résumé:")
+    print(f"   - Utilisateurs migrés: {users_migrated}")
+    print(f"   - Patients migrés: {patients_migrated}")
+    print(f"   - Base de données: {DATABASE_NAME}")
+    print(f"   - URI: {MONGODB_URI}")
+    
     print("\n💡 Prochaines étapes:")
-    print("  1. Vérifier que l'application fonctionne avec MongoDB")
-    print("  2. Tester toutes les fonctionnalités")
-    print("  3. Si tout fonctionne, vous pouvez supprimer les fichiers JSON/CSV")
-    print("  4. Les backups sont dans: backup_before_mongodb/")
-    print("=" * 60)
+    print("   1. Vérifiez les données dans MongoDB Compass")
+    print("   2. Relancez l'application: streamlit run app.py")
+    print("   3. L'application utilisera automatiquement MongoDB")
+    
+    print("\n⚠️  Note: Les fichiers JSON restent disponibles comme fallback")
+    print("   si MongoDB n'est pas accessible.")
+    
+    print("\n" + "="*60)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n❌ Migration interrompue par l'utilisateur.")
+    except Exception as e:
+        print(f"\n\n❌ Erreur inattendue: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        input("\nAppuyez sur Entrée pour quitter...")
