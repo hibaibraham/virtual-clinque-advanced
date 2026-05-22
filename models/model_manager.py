@@ -15,12 +15,22 @@ except ImportError as e:
     BRAIN_CANCER_AVAILABLE = False
     BrainCancerModel = None
 
+# Import conditionnel du modèle eye disease (nécessite TensorFlow)
+try:
+    from .eye_disease_model import EyeDiseaseModel
+    EYE_DISEASE_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Eye Disease model non disponible (TensorFlow requis): {e}")
+    EYE_DISEASE_AVAILABLE = False
+    EyeDiseaseModel = None
+
 class ModelManager:
     """Gère le chargement et l'utilisation des modèles"""
     
     def __init__(self):
         self.thyroid_model = ThyroidModel()
         self.brain_cancer_model = BrainCancerModel() if BRAIN_CANCER_AVAILABLE else None
+        self.eye_disease_model = EyeDiseaseModel() if EYE_DISEASE_AVAILABLE else None
         self.ptdm_model = PtdmModel()
         self.models_loaded = False
         
@@ -29,6 +39,7 @@ class ModelManager:
         with st.spinner("Chargement des modèles..."):
             thyroid_loaded = self.thyroid_model.load()
             brain_loaded = self.brain_cancer_model.load() if BRAIN_CANCER_AVAILABLE else False
+            eye_loaded = self.eye_disease_model.load() if EYE_DISEASE_AVAILABLE else False
             ptdm_loaded = self.ptdm_model.load()
             
             # Considérer comme chargé si thyroid et ptdm sont OK
@@ -38,6 +49,8 @@ class ModelManager:
                 st.success("✅ Modèles chargés avec succès!")
                 if not BRAIN_CANCER_AVAILABLE:
                     st.info("ℹ️ Modèle Brain Cancer non disponible (TensorFlow non installé)")
+                if not EYE_DISEASE_AVAILABLE:
+                    st.info("ℹ️ Modèle Eye Disease non disponible (TensorFlow non installé)")
             else:
                 st.warning("⚠️ Certains modèles n'ont pas pu être chargés")
                 
@@ -78,6 +91,18 @@ class ModelManager:
                 'loaded': self.brain_cancer_model.loaded
             }
         
+        # Ajouter eye disease seulement si disponible
+        if EYE_DISEASE_AVAILABLE and self.eye_disease_model:
+            models['eye_disease'] = {
+                'name': 'Détection Maladies Oculaires',
+                'description': 'Analyse d\'images oculaires',
+                'type': 'Deep Learning',
+                'algorithm': 'CNN',
+                'input_type': 'image',
+                'icon': '👁️',
+                'loaded': self.eye_disease_model.loaded
+            }
+        
         return models
     
     def get_model(self, model_type: str):
@@ -88,6 +113,10 @@ class ModelManager:
             if not BRAIN_CANCER_AVAILABLE:
                 raise ValueError("Modèle Brain Cancer non disponible (TensorFlow requis)")
             return self.brain_cancer_model
+        elif model_type == 'eye_disease':
+            if not EYE_DISEASE_AVAILABLE:
+                raise ValueError("Modèle Eye Disease non disponible (TensorFlow requis)")
+            return self.eye_disease_model
         elif model_type == 'ptdm':
             return self.ptdm_model
         else:
@@ -95,8 +124,14 @@ class ModelManager:
     
     def get_model_stats(self) -> Dict[str, Any]:
         """Obtenir les statistiques des modèles"""
+        total_models = 2  # thyroid + ptdm
+        if BRAIN_CANCER_AVAILABLE:
+            total_models += 1
+        if EYE_DISEASE_AVAILABLE:
+            total_models += 1
+            
         stats = {
-            'total_models': 2 if not BRAIN_CANCER_AVAILABLE else 3,
+            'total_models': total_models,
             'loaded_models': 0,
             'models': {}
         }
@@ -136,6 +171,28 @@ class ModelManager:
         else:
             stats['models']['brain_cancer'] = {
                 'name': 'Brain Cancer Model',
+                'status': '⚠️ Non disponible (TensorFlow requis)'
+            }
+        
+        # Modèle eye disease (seulement si disponible)
+        if EYE_DISEASE_AVAILABLE and self.eye_disease_model:
+            if self.eye_disease_model.loaded:
+                stats['loaded_models'] += 1
+                eye_info = self.eye_disease_model.get_model_info()
+                stats['models']['eye_disease'] = {
+                    'name': eye_info.get('name', 'Eye Disease Model'),
+                    'type': eye_info.get('type', 'CNN'),
+                    'classes': eye_info.get('classes', 0),
+                    'status': '✅ Chargé'
+                }
+            else:
+                stats['models']['eye_disease'] = {
+                    'name': 'Eye Disease Model',
+                    'status': '❌ Non chargé'
+                }
+        else:
+            stats['models']['eye_disease'] = {
+                'name': 'Eye Disease Model',
                 'status': '⚠️ Non disponible (TensorFlow requis)'
             }
             

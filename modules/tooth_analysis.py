@@ -19,6 +19,7 @@ MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
 CLASS_NAMES = ['Cavity', 'Fillings', 'Impacted Tooth', 'Implant', 'Normal']
 NUM_CLASSES = 5
 IMG_SIZE = 224
+DEVELOPMENT_MODE = not os.path.exists(MODEL_PATH)
 
 # Transformations pour les images
 transform = transforms.Compose([
@@ -80,16 +81,21 @@ def load_model():
             nn.Linear(num_features, NUM_CLASSES)
         )
         
-        # Charger les poids
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
+        # Charger les poids si le modèle existe
         if os.path.exists(MODEL_PATH):
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-            model.to(device)
-            model.eval()
-            return model, device
+            st.success("✅ Modèle ResNet18 chargé avec succès")
         else:
-            st.error(f"❌ Modèle introuvable: {MODEL_PATH}")
-            return None, None
+            st.warning(f"⚠️ Mode développement: Modèle non entraîné")
+            st.info(f"📁 Chemin attendu: {MODEL_PATH}")
+            # Initialiser avec des poids aléatoires pour le développement
+        
+        model.to(device)
+        model.eval()
+        return model, device
+        
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle: {e}")
         return None, None
@@ -159,12 +165,12 @@ def render():
     model, device = load_model()
     
     if model is None:
-        st.error("❌ Impossible de charger le modèle. Vérifiez que le fichier tooth_model.pth existe.")
-        st.info(f"📁 Chemin attendu: {MODEL_PATH}")
+        st.error("❌ Impossible de charger le modèle.")
         return
     
     # Informations sur le modèle
-    st.success("✅ Modèle ResNet18 chargé avec succès")
+    if not DEVELOPMENT_MODE:
+        st.success("✅ Modèle ResNet18 chargé avec succès")
     
     col1, col2, col3 = st.columns(3)
     with col1:
