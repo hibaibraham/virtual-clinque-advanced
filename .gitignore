@@ -21,6 +21,7 @@ ENV/
 
 # Models (too large for Git)
 *.pth
+!tooth.model/data/tooth_model.pth
 *.h5
 *.pkl
 *.joblib
