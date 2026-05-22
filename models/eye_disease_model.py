@@ -1,5 +1,5 @@
 """
-Modèle Deep Learning pour le diagnostic du cancer du cerveau
+Modèle Deep Learning pour le diagnostic des maladies oculaires
 """
 import os
 import numpy as np
@@ -13,18 +13,19 @@ from typing import Dict, Tuple, Any, Optional
 from PIL import Image
 import io
 
-class BrainCancerModel:
-    """Modèle CNN pour la classification d'images MRI de cerveau"""
+class EyeDiseaseModel:
+    """Modèle CNN pour la classification d'images oculaires"""
     
-    def __init__(self, model_dir: str = "saved_models/brain_cancer"):
+    def __init__(self, model_dir: str = "saved_models/eye_disease"):
         self.model_dir = model_dir
         self.model = None
-        self.class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
+        self.class_names = ['Bulging_Eyes', 'Cataracts', 'Crossed_Eyes', 'Glaucoma', 'Uveitis']
         self.class_names_fr = {
-            'glioma': 'Gliome',
-            'meningioma': 'Méningiome', 
-            'notumor': 'Pas de tumeur',
-            'pituitary': 'Tumeur hypophysaire'
+            'Bulging_Eyes': 'Yeux Exorbités',
+            'Cataracts': 'Cataracte',
+            'Crossed_Eyes': 'Strabisme',
+            'Glaucoma': 'Glaucome',
+            'Uveitis': 'Uvéite'
         }
         self.loaded = False
         
@@ -34,30 +35,36 @@ class BrainCancerModel:
             if not TF_AVAILABLE:
                 raise ImportError("Tensorflow n'est pas installé.")
                 
-            model_path = os.path.join(self.model_dir, 'brain_cancer_model.h5')
+            model_path = os.path.join(self.model_dir, 'eye_disease_model.h5')
             
-            # Charger le modèle Keras
-            self.model = keras.models.load_model(model_path)
-            
-            # Vérifier que le modèle est chargé
-            self.model.predict(np.zeros((1, 224, 224, 3)))  # Test prediction
-            
-            self.loaded = True
-            return True
+            # Vérifier si le modèle existe
+            if os.path.exists(model_path):
+                # Charger le modèle Keras
+                self.model = keras.models.load_model(model_path)
+                
+                # Vérifier que le modèle est chargé
+                self.model.predict(np.zeros((1, 224, 224, 3)))  # Test prediction
+                
+                self.loaded = True
+                return True
+            else:
+                # Créer un modèle factice pour le développement
+                self._create_dummy_model()
+                return True
         except Exception as e:
-            print(f"Erreur chargement modèle brain cancer: {e}")
+            print(f"Erreur chargement modèle eye disease: {e}")
             # Créer un modèle factice pour le développement
             self._create_dummy_model()
             return True  # Retourner True pour le développement
     
     def _create_dummy_model(self):
         """Créer un modèle factice pour le développement"""
-        print("⚠️  Création d'un modèle factice pour le développement (Brain Cancer)")
+        print("⚠️  Création d'un modèle factice pour le développement (Eye Disease)")
         if TF_AVAILABLE:
             self.model = keras.Sequential([
                 keras.layers.Input(shape=(224, 224, 3)),
                 keras.layers.Flatten(),
-                keras.layers.Dense(4, activation='softmax')
+                keras.layers.Dense(len(self.class_names), activation='softmax')
             ])
             self.model.compile(optimizer='adam', loss='categorical_crossentropy')
         else:
@@ -65,7 +72,7 @@ class BrainCancerModel:
         self.loaded = True
     
     def preprocess_image(self, image_data: bytes) -> np.ndarray:
-        """Prétraiter une image MRI"""
+        """Prétraiter une image oculaire"""
         # Charger l'image depuis les bytes
         image = Image.open(io.BytesIO(image_data))
         
@@ -85,7 +92,7 @@ class BrainCancerModel:
         return img_array
     
     def predict(self, image_data: bytes) -> Tuple[str, float, Dict[str, float]]:
-        """Faire une prédiction sur une image MRI"""
+        """Faire une prédiction sur une image oculaire"""
         if not self.loaded:
             raise ValueError("Modèle non chargé")
         
@@ -120,17 +127,17 @@ class BrainCancerModel:
         # Pour un modèle factice, retourner des informations par défaut
         if not TF_AVAILABLE or isinstance(self.model, str) or len(self.model.layers) < 3:  # Modèle factice
             return {
-                'name': 'CNN Brain Cancer (Développement)',
+                'name': 'CNN Eye Disease (Développement)',
                 'type': 'Convolutional Neural Network',
                 'input_shape': (224, 224, 3),
-                'classes': 4,
+                'classes': len(self.class_names),
                 'class_names': self.class_names_fr,
                 'status': 'development'
             }
         
         # Pour un vrai modèle
         return {
-            'name': 'CNN Brain Cancer',
+            'name': 'CNN Eye Disease',
             'type': 'Convolutional Neural Network',
             'input_shape': self.model.input_shape[1:],
             'output_shape': self.model.output_shape[1:],
@@ -143,29 +150,35 @@ class BrainCancerModel:
     def get_class_description(self, class_name: str) -> Dict[str, str]:
         """Obtenir la description d'une classe"""
         descriptions = {
-            'glioma': {
-                'name': 'Gliome',
-                'description': 'Tumeur cérébrale qui prend naissance dans les cellules gliales',
-                'prevalence': '40-50% des tumeurs cérébrales primaires',
-                'treatment': 'Chirurgie, radiothérapie, chimiothérapie'
+            'Bulging_Eyes': {
+                'name': 'Yeux Exorbités (Exophtalmie)',
+                'description': 'Protrusion anormale des yeux hors de leurs orbites',
+                'prevalence': 'Souvent associée à l\'hyperthyroïdie',
+                'treatment': 'Traitement de la cause sous-jacente, chirurgie si nécessaire'
             },
-            'meningioma': {
-                'name': 'Méningiome',
-                'description': 'Tumeur se développant à partir des méninges',
-                'prevalence': '30-35% des tumeurs cérébrales primaires',
-                'treatment': 'Chirurgie, radiothérapie'
+            'Cataracts': {
+                'name': 'Cataracte',
+                'description': 'Opacification du cristallin de l\'œil',
+                'prevalence': 'Très fréquente après 60 ans',
+                'treatment': 'Chirurgie de remplacement du cristallin'
             },
-            'notumor': {
-                'name': 'Pas de tumeur',
-                'description': 'Aucune tumeur cérébrale détectée',
-                'prevalence': 'N/A',
-                'treatment': 'Aucun traitement nécessaire'
+            'Crossed_Eyes': {
+                'name': 'Strabisme',
+                'description': 'Défaut d\'alignement des yeux',
+                'prevalence': '2-4% de la population',
+                'treatment': 'Orthoptie, lunettes, chirurgie'
             },
-            'pituitary': {
-                'name': 'Tumeur hypophysaire',
-                'description': 'Tumeur de la glande pituitaire',
-                'prevalence': '10-15% des tumeurs cérébrales primaires',
-                'treatment': 'Chirurgie, médicaments, radiothérapie'
+            'Glaucoma': {
+                'name': 'Glaucome',
+                'description': 'Maladie du nerf optique souvent liée à la pression intraoculaire',
+                'prevalence': '2% de la population après 40 ans',
+                'treatment': 'Collyres, laser, chirurgie'
+            },
+            'Uveitis': {
+                'name': 'Uvéite',
+                'description': 'Inflammation de l\'uvée (iris, corps ciliaire, choroïde)',
+                'prevalence': 'Relativement rare',
+                'treatment': 'Anti-inflammatoires, immunosuppresseurs'
             }
         }
         
